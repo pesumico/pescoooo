@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Snake Game with Images</title>
+  <style>
+    body {
+      background-color: #000000; /* black background */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #fff;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    #info {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    canvas {
+      background-color: #cf8435; /* brown play area */
+      border: 2px solid #fff;
+      box-shadow: 0 0 10px #2f1c02;
+    }
+
+    #restart-btn {
+      display: none;
+      margin-top: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #f4b400;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: #000;
+      font-weight: bold;
+    }
+
+    #restart-btn:hover {
+      background-color: #ffd54f;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐝 Gensyn Bee Game</h1>
+  <div id="info">
+    <span id="score">Score: 0</span> |
+    <span id="level">Level: 1</span>
+  </div>
+  <canvas id="game" width="400" height="400"></canvas>
+  <button id="restart-btn" onclick="restartGame()">Restart Game</button>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const box = 20;
+
+    const snakeImage = new Image();
+    snakeImage.src = "bee.jpg"; // your snake image
+
+    const foodImage = new Image();
+    foodImage.src = "pollen.jpg"; // your food image
+
+    let snake = [{ x: 9 * box, y: 10 * box }];
+    let food = {
+      x: Math.floor(Math.random() * 19 + 1) * box,
+      y: Math.floor(Math.random() * 19 + 1) * box
+    };
+
+    let direction;
+    let score = 0;
+    let level = 1;
+    let speed = 200;
+    let game;
+    const restartBtn = document.getElementById("restart-btn");
+
+    document.addEventListener("keydown", setDirection);
+
+    function setDirection(e) {
+      if (e.keyCode == 37 && direction != "RIGHT") direction = "LEFT";
+      else if (e.keyCode == 38 && direction != "DOWN") direction = "UP";
+      else if (e.keyCode == 39 && direction != "LEFT") direction = "RIGHT";
+      else if (e.keyCode == 40 && direction != "UP") direction = "DOWN";
+    }
+
+    function collision(head, array) {
+      return array.some(part => head.x === part.x && head.y === part.y);
+    }
+
+    function draw() {
+      ctx.fillStyle = "#6c3c0a"; // brown play area
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = 0; i < snake.length; i++) {
+        ctx.drawImage(snakeImage, snake[i].x, snake[i].y, box, box);
+      }
+
+      ctx.drawImage(foodImage, food.x, food.y, box, box);
+
+      let snakeX = snake[0].x;
+      let snakeY = snake[0].y;
+
+      if (direction === "LEFT") snakeX -= box;
+      if (direction === "UP") snakeY -= box;
+      if (direction === "RIGHT") snakeX += box;
+      if (direction === "DOWN") snakeY += box;
+
+      if (snakeX === food.x && snakeY === food.y) {
+        score++;
+        document.getElementById("score").textContent = "Score: " + score;
+        food = {
+          x: Math.floor(Math.random() * 19 + 1) * box,
+          y: Math.floor(Math.random() * 19 + 1) * box
+        };
+
+        if (score % 5 === 0) {
+          level++;
+          document.getElementById("level").textContent = "Level: " + level;
+          speed = Math.max(60, speed - 20);
+          clearInterval(game);
+          game = setInterval(draw, speed);
+        }
+      } else {
+        snake.pop();
+      }
+
+      const newHead = { x: snakeX, y: snakeY };
+
+      if (
+        snakeX < 0 ||
+        snakeY < 0 ||
+        snakeX >= canvas.width ||
+        snakeY >= canvas.height ||
+        collision(newHead, snake)
+      ) {
+        clearInterval(game);
+        ctx.fillStyle = "red";
+        ctx.font = "40px Arial";
+        ctx.fillText("GAME OVER", 100, 200);
+        restartBtn.style.display = "inline-block";
+        return;
+      }
+
+      snake.unshift(newHead);
+    }
+
+    function restartGame() {
+      snake = [{ x: 9 * box, y: 10 * box }];
+      food = {
+        x: Math.floor(Math.random() * 19 + 1) * box,
+        y: Math.floor(Math.random() * 19 + 1) * box
+      };
+      direction = null;
+      score = 0;
+      level = 1;
+      speed = 200;
+      document.getElementById("score").textContent = "Score: 0";
+      document.getElementById("level").textContent = "Level: 1";
+      restartBtn.style.display = "none";
+      clearInterval(game);
+      game = setInterval(draw, speed);
+    }
+
+    snakeImage.onload = () => {
+      foodImage.onload = () => {
+        game = setInterval(draw, speed);
+      };
+    };
+  </script>
+</body>
+</html>
